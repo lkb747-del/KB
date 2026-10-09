@@ -154,8 +154,32 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
 .day .cell.part { border-style: solid; border-color: var(--sun); background: var(--sun-soft); color: var(--ink); }
 .day .cell.full { border: 3px solid var(--stamp); color: var(--stamp); transform: rotate(-12deg); font-size: .78rem; line-height: 1.05; text-align: center; }
 
+/* 칭찬 스티커 */
+.reward { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); display: grid; gap: 12px; }
+.reward-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.reward-head h3 { font-size: 1.2rem; }
+.reward-total { font-family: var(--font-display); font-size: 1.15rem; color: var(--stamp); }
+.next-msg { color: var(--muted); }
+.next-msg b { color: var(--ink); font-weight: 400; font-family: var(--font-display); font-size: 1.1rem; }
+.bar.sun > span { background: var(--sun); }
+.tiers { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.tier { border: 2px dashed var(--line); border-radius: 16px; padding: 10px 8px; display: grid; gap: 2px; justify-items: center; align-content: start; text-align: center; color: var(--muted); }
+.tier .ti { font-size: 2rem; line-height: 1.15; filter: grayscale(1); opacity: .45; }
+.tier .tn { font-family: var(--font-display); font-size: 1.05rem; }
+.tier .tc, .tier .tp, .tier .ts { font-size: .84rem; line-height: 1.35; }
+.tier.got { border-style: solid; border-color: var(--sun); background: var(--sun-soft); color: var(--ink); }
+.tier.got .ti { filter: none; opacity: 1; }
+.tier .ts { margin-top: 4px; border-radius: 999px; padding: 1px 8px; background: var(--card); }
+.tier.given .ts { background: var(--leaf); color: #fff; }
+.stu .lv { font-size: 1.05rem; }
+.pending-row { display: flex; gap: 8px 12px; align-items: center; flex-wrap: wrap; background: var(--paper); border-radius: 12px; padding: 8px 10px; }
+.pending-row .who { font-family: var(--font-display); min-width: 6em; }
+.pending-row .what { flex: 1 1 12em; min-width: 0; }
+.form-row.reward-row { grid-template-columns: 56px 84px minmax(0, 1fr) minmax(0, 1.5fr) auto; }
+.left-count { color: var(--muted); font-size: .85rem; }
+
 /* 큰 도장 */
-.stamp-layer { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 40; }
+.stamp-layer { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding-inline: 16px; pointer-events: none; z-index: 40; }
 .big-stamp {
   width: min(62vw, 300px); aspect-ratio: 1; border-radius: 50%; border: 10px solid var(--stamp);
   color: var(--stamp); background: color-mix(in srgb, var(--card) 82%, transparent);
@@ -163,6 +187,16 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text
   font-size: clamp(2.2rem, 11vw, 3.6rem); line-height: 1.1; box-shadow: 0 0 0 6px color-mix(in srgb, var(--stamp) 25%, transparent) inset;
   animation: thump .55s cubic-bezier(.2, 1.6, .4, 1) both;
 }
+.levelup {
+  background: var(--card); border: 4px solid var(--sun); border-radius: 22px; padding: 14px 20px; max-width: 420px;
+  text-align: center; box-shadow: var(--shadow); display: grid; gap: 4px; animation: pop .45s .35s cubic-bezier(.2, 1.5, .4, 1) both;
+}
+.levelup .lu-ico { font-size: 2.6rem; line-height: 1.1; }
+.levelup .lu-title { font-family: var(--font-display); font-size: 1.6rem; }
+.levelup .lu-prize { color: var(--muted); }
+.levelup .lu-prize b { color: var(--ink); font-weight: 400; font-family: var(--font-display); font-size: 1.1rem; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (max-width: 640px) { .form-row.reward-row { grid-template-columns: 56px 84px minmax(0, 1fr); } .form-row.reward-row > :nth-child(n+3) { grid-column: auto; } .form-row.reward-row > :nth-child(n+4) { grid-column: 1 / -1; } }
 @keyframes thump { from { transform: scale(2.2) rotate(-30deg); opacity: 0; } to { transform: scale(1) rotate(-14deg); opacity: 1; } }
 
 /* 선생님 화면 */
@@ -286,6 +320,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       </div>
       <div class="week-row" id="meWeek"></div>
     </section>
+    <section class="reward" id="meReward"></section>
   </main>
 
   <!-- 3. 선생님 화면 -->
@@ -295,6 +330,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       <button class="tab" role="tab" data-tab="week" aria-selected="false" type="button">주간 기록</button>
       <button class="tab" role="tab" data-tab="students" aria-selected="false" type="button">학생·1인1역</button>
       <button class="tab" role="tab" data-tab="habits" aria-selected="false" type="button">습관 항목</button>
+      <button class="tab" role="tab" data-tab="rewards" aria-selected="false" type="button">칭찬 보상</button>
       <button class="tab" role="tab" data-tab="settings" aria-selected="false" type="button">설정·백업</button>
     </div>
 
@@ -356,6 +392,22 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       </div>
     </section>
 
+    <section class="panel" data-panel="rewards" hidden>
+      <div class="card">
+        <h3>보상을 줄 친구</h3>
+        <p class="help">새 단계에 오른 친구예요. 보상을 준 뒤 ‘줬어요’를 누르면 목록에서 빠져요.</p>
+        <div class="missing" id="pendingList"></div>
+      </div>
+      <div class="table-scroll"><table id="rewardTable"></table></div>
+      <p class="help">초록 칸은 보상을 이미 준 단계예요. 칸을 눌러 바꿀 수 있어요.</p>
+      <div class="card">
+        <h3>보상 단계 정하기</h3>
+        <p class="help">‘참 잘했어요’ 도장(그날 습관을 모두 한 날)을 몇 개 모으면 어떤 보상을 줄지 정해요. 그림, 필요한 도장 수, 단계 이름, 보상 순서로 적어요. 최대 8단계까지 만들 수 있어요.</p>
+        <div class="form-list" id="rewardForm"></div>
+        <div class="row"><button class="btn" type="button" id="addReward">단계 추가</button></div>
+      </div>
+    </section>
+
     <section class="panel" data-panel="settings" hidden>
       <div class="card">
         <h3>반 이름</h3>
@@ -383,7 +435,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       <div class="card">
         <h3>처음부터 다시</h3>
         <div class="row">
-          <button class="btn danger" type="button" id="clearRecords">체크 기록만 지우기</button>
+          <button class="btn danger" type="button" id="clearRecords">체크·보상 기록만 지우기</button>
           <button class="btn danger" type="button" id="resetAll">모두 지우기</button>
         </div>
         <p class="help">버튼을 한 번 더 누르면 지워져요.</p>
@@ -392,7 +444,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
   </main>
 </div>
 
-<div class="stamp-layer" id="stampLayer" hidden><div class="big-stamp">참<br>잘했어요</div></div>
+<div class="stamp-layer" id="stampLayer" hidden><div class="big-stamp">참<br>잘했어요</div><div class="levelup" id="levelUp" hidden></div></div>
 
 <div class="modal" id="pinModal" hidden>
   <div class="pin-box" id="pinBox">
@@ -434,6 +486,15 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       { id: 'job', icon: '🧹', label: '1인1역', hint: '내 역할을 책임감 있게', role: true }
     ];
   }
+  function defaultRewards() {
+    return [
+      { id: 'r1', count: 5, icon: '🌱', name: '새싹', prize: '선생님 칭찬 쪽지' },
+      { id: 'r2', count: 10, icon: '🌿', name: '잎새', prize: '원하는 자리에 하루 앉기' },
+      { id: 'r3', count: 20, icon: '🌸', name: '꽃', prize: '급식 먼저 먹기 1번' },
+      { id: 'r4', count: 30, icon: '🍎', name: '열매', prize: '다음 달 1인1역 먼저 고르기' },
+      { id: 'r5', count: 50, icon: '🏆', name: '습관왕', prize: '습관왕 상장' }
+    ];
+  }
   function sampleState() {
     var names = [
       ['김하늘', '칠판 정리'], ['이도윤', '우유 나르기'], ['박서아', '창문 열고 닫기'], ['최지호', '화분 물 주기'],
@@ -442,21 +503,30 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     var students = names.map(function (n, i) { return { id: uid(), no: i + 1, name: n[0], role: n[1] }; });
     var habits = defaultHabits();
     var records = {};
-    var mon = mondayOf(new Date());
     var tk = todayKey();
-    // 이번 주 지난 날짜와 오늘 일부에 예시 기록을 채운다
-    for (var d = 0; d < 5; d++) {
-      var day = addDays(mon, d), k = keyOf(day);
-      if (k > tk) break;
+    var rnd = function (a) { var x = Math.sin(a) * 10000; return x - Math.floor(x); };
+    var miss = [0.04, 0.09, 0.14, 0.22];
+    // 3주 전 월요일부터 오늘까지 평일에 예시 기록을 채운다
+    for (var d = 0, day = addDays(mondayOf(new Date()), -21); keyOf(day) <= tk; d++, day = addDays(day, 1)) {
+      if (isWeekend(day)) continue;
+      var k = keyOf(day);
       records[k] = {};
       students.forEach(function (s, si) {
-        var list = habits.filter(function (h, hi) { return ((si * 7 + d * 3 + hi * 5) % (k === tk ? 4 : 6)) !== 0; })
+        var list = habits.filter(function (h, hi) { return rnd(si * 131 + d * 17 + hi * 7 + 1) > miss[si % 4]; })
           .map(function (h) { return h.id; });
         if (k === tk && si % 3 === 2) list = [];
         if (list.length) records[k][s.id] = list;
       });
     }
-    return { version: 1, className: '3학년 2반', pin: '0000', sample: true, students: students, habits: habits, records: records };
+    var given = {};
+    students.forEach(function (s, si) {
+      var full = Object.keys(records).filter(function (k) { return (records[k][s.id] || []).length === habits.length; }).length;
+      // 예시: 대부분은 받은 상태로, 몇 명은 가장 최근 단계 보상을 아직 안 받은 상태로
+      var got = defaultRewards().filter(function (r) { return full >= r.count; }).map(function (r) { return r.id; });
+      if (si % 3 === 0) got.pop();
+      if (got.length) given[s.id] = got;
+    });
+    return { version: 1, className: '3학년 2반', pin: '0000', sample: true, students: students, habits: habits, records: records, rewards: defaultRewards(), given: given };
   }
   function load() {
     try {
@@ -467,6 +537,8 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
   }
   var state = load();
   if (!state.records) state.records = {};
+  if (!Array.isArray(state.rewards)) state.rewards = defaultRewards();
+  if (!state.given) state.given = {};
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
     catch (e) { toast('이 브라우저에는 저장할 수 없어요. 백업을 이용해 주세요.'); }
@@ -497,6 +569,20 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       n++; d = addDays(d, -1);
     }
     return n;
+  }
+  // 칭찬 스티커: 그날 습관을 모두 한 날마다 도장 1개
+  function stampTotal(sid) { return Object.keys(state.records).filter(function (k) { return allDone(k, sid); }).length; }
+  function sortedRewards() {
+    return state.rewards.filter(function (r) { return +r.count > 0; }).slice().sort(function (a, b) { return a.count - b.count; });
+  }
+  function levelOf(total) { var cur = null; sortedRewards().forEach(function (r) { if (total >= r.count) cur = r; }); return cur; }
+  function nextOf(total) { return sortedRewards().find(function (r) { return total < r.count; }) || null; }
+  function isGiven(sid, rid) { return (state.given[sid] || []).indexOf(rid) >= 0; }
+  function setGiven(sid, rid, on) {
+    var l = (state.given[sid] || []).filter(function (x) { return x !== rid; });
+    if (on) l.push(rid);
+    if (l.length) state.given[sid] = l; else delete state.given[sid];
+    save();
   }
   function habitHint(h, s) { return h.role ? (s && s.role ? '내 역할: ' + s.role : '선생님께 역할을 여쭤봐요') : h.hint; }
 
@@ -565,9 +651,9 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     }
     $('studentGrid').innerHTML = list.map(function (s) {
       var dots = state.habits.map(function (h) { return '<span class="dot' + (isDone(tk, s.id, h.id) ? ' on' : '') + '"></span>'; }).join('');
-      var ok = allDone(tk, s.id);
+      var ok = allDone(tk, s.id), lv = levelOf(stampTotal(s.id));
       return '<button type="button" class="stu' + (ok ? ' done' : '') + '" data-sid="' + s.id + '">' +
-        '<span class="no num">' + esc(s.no) + '번</span><span class="nm">' + esc(s.name) + '</span>' +
+        '<span class="no num">' + esc(s.no) + '번</span><span class="nm">' + esc(s.name) + (lv ? ' <span class="lv" title="' + esc(lv.name) + ' 단계">' + esc(lv.icon) + '</span>' : '') + '</span>' +
         '<span class="dots" aria-label="' + doneCount(tk, s.id) + '개 완료">' + dots + '</span>' +
         (ok ? '<span class="mini-stamp">참<br>잘했어요</span>' : '') + '</button>';
     }).join('');
@@ -601,21 +687,56 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     $('meWeek').innerHTML = cells;
     var st = streak(s.id);
     $('meStreak').textContent = st > 0 ? st + '일 연속으로 다 했어요!' : '오늘부터 도장을 모아 봐요';
+    renderReward(s);
+  }
+  function renderReward(s) {
+    var tiers = sortedRewards(), box = $('meReward');
+    box.hidden = !tiers.length;
+    if (!tiers.length) return;
+    var total = stampTotal(s.id), nx = nextOf(total), cur = levelOf(total), base = cur ? +cur.count : 0;
+    var html = '<div class="reward-head"><h3>내 칭찬 스티커</h3><span class="reward-total num">도장 ' + total + '개</span></div>';
+    if (nx) {
+      var pct = Math.round((total - base) / (nx.count - base) * 100);
+      html += '<div class="next-msg">' + esc(nx.icon + ' ' + nx.name) + ' 단계까지 <b class="num">' + (nx.count - total) + '개</b> 남았어요</div>' +
+        '<div class="bar sun"><span style="width:' + pct + '%"></span></div>';
+    } else {
+      html += '<div class="next-msg"><b>모든 단계를 다 모았어요! 정말 대단해요</b></div>';
+    }
+    html += '<div class="tiers">' + tiers.map(function (r) {
+      var got = total >= r.count, given = got && isGiven(s.id, r.id);
+      return '<div class="tier' + (got ? ' got' : '') + (given ? ' given' : '') + '">' +
+        '<span class="ti" aria-hidden="true">' + esc(r.icon) + '</span><span class="tn">' + esc(r.name) + '</span>' +
+        '<span class="tc num">도장 ' + esc(r.count) + '개</span><span class="tp">' + esc(r.prize) + '</span>' +
+        (got ? '<span class="ts">' + (given ? '받았어요 ✓' : '선생님께 받아요') + '</span>' : '') + '</div>';
+    }).join('') + '</div>';
+    box.innerHTML = html;
   }
   $('habitCards').addEventListener('click', function (e) {
     var b = e.target.closest('[data-hid]'); if (!b) return;
     var tk = todayKey(), sid = currentStudent, hid = b.dataset.hid;
-    var was = allDone(tk, sid);
+    var was = allDone(tk, sid), before = levelOf(stampTotal(sid));
     setDone(tk, sid, hid, !isDone(tk, sid, hid));
     renderStudent();
-    if (!was && allDone(tk, sid)) stamp();
+    if (!was && allDone(tk, sid)) {
+      var after = levelOf(stampTotal(sid));
+      stamp(after && after !== before ? after : null);
+    }
   });
   $('viewStudent').addEventListener('pointerdown', bumpIdle);
   $('doneBtn').addEventListener('click', function () { show('home'); });
 
-  function stamp() {
-    var l = $('stampLayer'); l.hidden = true; void l.offsetWidth; l.hidden = false;
-    setTimeout(function () { l.hidden = true; }, 1800);
+  var stampTimer;
+  function stamp(level) {
+    var l = $('stampLayer'), lu = $('levelUp');
+    lu.hidden = !level;
+    if (level) {
+      lu.innerHTML = '<span class="lu-ico" aria-hidden="true">' + esc(level.icon) + '</span>' +
+        '<span class="lu-title">' + esc(level.name) + ' 단계에 올랐어요!</span>' +
+        '<span class="lu-prize">보상 <b>' + esc(level.prize) + '</b><br>선생님께 말씀드려요</span>';
+    }
+    l.hidden = true; void l.offsetWidth; l.hidden = false;
+    clearTimeout(stampTimer);
+    stampTimer = setTimeout(function () { l.hidden = true; }, level ? 4200 : 1800);
   }
 
   // ---------- 비밀번호 ----------
@@ -667,6 +788,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     if (tab === 'week') renderWeek();
     if (tab === 'students') renderStudentForm();
     if (tab === 'habits') renderHabitForm();
+    if (tab === 'rewards') { renderRewardStatus(); renderRewardForm(); }
     if (tab === 'settings') $('classNameInput').value = state.className || '';
   }
 
@@ -747,6 +869,77 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     copyText(rows.join('\n'), '복사했어요. 엑셀이나 한글 표에 붙여 넣으세요.');
   });
 
+  // 칭찬 보상
+  function renderRewardStatus() {
+    var list = sortedStudents(), tiers = sortedRewards();
+    var pend = [];
+    list.forEach(function (s) {
+      var total = stampTotal(s.id);
+      tiers.forEach(function (r) { if (total >= r.count && !isGiven(s.id, r.id)) pend.push({ s: s, r: r }); });
+    });
+    $('pendingList').innerHTML = pend.length ? pend.map(function (p) {
+      return '<div class="pending-row"><span class="who">' + esc(p.s.no + '. ' + p.s.name) + '</span>' +
+        '<span class="what">' + esc(p.r.icon + ' ' + p.r.name + ' 단계') + ' · ' + esc(p.r.prize) + '</span>' +
+        '<button type="button" class="btn small primary" data-give data-sid="' + p.s.id + '" data-rid="' + esc(p.r.id) + '">줬어요</button></div>';
+    }).join('') : '<p class="help">지금은 줄 보상이 없어요.</p>';
+    var head = '<thead><tr><th>번호</th><th class="left">이름</th><th>도장</th><th>지금 단계</th><th>다음 단계까지</th>' +
+      tiers.map(function (r) { return '<th>' + esc(r.icon) + ' ' + esc(r.name) + ' <span class="num">(' + esc(r.count) + ')</span></th>'; }).join('') + '</tr></thead>';
+    var body = list.map(function (s) {
+      var total = stampTotal(s.id), cur = levelOf(total), nx = nextOf(total);
+      return '<tr><td class="num">' + esc(s.no) + '</td><td class="left">' + esc(s.name) + '</td><td class="num">' + total + '개</td>' +
+        '<td>' + (cur ? esc(cur.icon + ' ' + cur.name) : '-') + '</td>' +
+        '<td class="num">' + (nx ? (nx.count - total) + '개' : '다 모음') + '</td>' +
+        tiers.map(function (r) {
+          if (total < r.count) return '<td class="left-count num">' + (r.count - total) + '개 남음</td>';
+          return '<td><button type="button" class="tog" data-sid="' + s.id + '" data-rid="' + esc(r.id) + '" aria-pressed="' + isGiven(s.id, r.id) + '" aria-label="' + esc(s.name + ' ' + r.name + ' 보상 줌') + '">✓</button></td>';
+        }).join('') + '</tr>';
+    }).join('');
+    $('rewardTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+  }
+  $('pendingList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-give]'); if (!b) return;
+    setGiven(b.dataset.sid, b.dataset.rid, true); renderRewardStatus(); toast('보상을 줬다고 기록했어요.');
+  });
+  $('rewardTable').addEventListener('click', function (e) {
+    var b = e.target.closest('.tog'); if (!b) return;
+    setGiven(b.dataset.sid, b.dataset.rid, !isGiven(b.dataset.sid, b.dataset.rid)); renderRewardStatus();
+  });
+  function renderRewardForm() {
+    $('rewardForm').innerHTML = sortedRewards().concat(state.rewards.filter(function (r) { return !(+r.count > 0); })).map(function (r) {
+      var id = esc(r.id);
+      return '<div class="form-row reward-row" data-rid="' + id + '">' +
+        '<input type="text" data-f="icon" id="ri-' + id + '" value="' + esc(r.icon) + '" maxlength="4" aria-label="그림" style="text-align:center;font-size:1.3rem">' +
+        '<input type="number" min="1" data-f="count" id="rc-' + id + '" value="' + esc(r.count) + '" aria-label="필요한 도장 수">' +
+        '<input type="text" data-f="name" id="rn-' + id + '" value="' + esc(r.name) + '" placeholder="단계 이름" aria-label="단계 이름">' +
+        '<input type="text" data-f="prize" id="rp-' + id + '" value="' + esc(r.prize) + '" placeholder="보상 (예: 자리 바꾸기)" aria-label="보상">' +
+        '<button type="button" class="btn small danger" data-del>삭제</button></div>';
+    }).join('');
+    $('addReward').disabled = state.rewards.length >= 8;
+  }
+  $('rewardForm').addEventListener('input', function (e) {
+    var row = e.target.closest('[data-rid]'), f = e.target.dataset.f; if (!row || !f) return;
+    var r = state.rewards.find(function (x) { return x.id === row.dataset.rid; }); if (!r) return;
+    r[f] = f === 'count' ? (parseInt(e.target.value, 10) || '') : e.target.value;
+    save(); renderRewardStatus();
+  });
+  $('rewardForm').addEventListener('change', function (e) { if (e.target.dataset.f === 'count') renderRewardForm(); });
+  $('rewardForm').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    var rid = b.closest('[data-rid]').dataset.rid;
+    armed(b, '정말 삭제?', function () {
+      state.rewards = state.rewards.filter(function (x) { return x.id !== rid; });
+      Object.keys(state.given).forEach(function (sid) { setGiven(sid, rid, false); });
+      save(); renderRewardForm(); renderRewardStatus(); toast('삭제했어요.');
+    });
+  });
+  $('addReward').addEventListener('click', function () {
+    if (state.rewards.length >= 8) return;
+    var max = state.rewards.reduce(function (m, r) { return Math.max(m, +r.count || 0); }, 0);
+    var r = { id: 'r' + uid(), count: max + 10, icon: '⭐', name: '', prize: '' };
+    state.rewards.push(r); save(); renderRewardForm(); renderRewardStatus();
+    var el = $('rn-' + r.id); if (el) el.focus();
+  });
+
   // 학생 관리
   function leaveSample() { if (state.sample) { state.sample = false; renderHeader(); } }
   function renderStudentForm() {
@@ -772,6 +965,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     armed(b, '정말 삭제?', function () {
       state.students = state.students.filter(function (x) { return x.id !== sid; });
       Object.keys(state.records).forEach(function (k) { delete state.records[k][sid]; });
+      delete state.given[sid];
       leaveSample(); save(); renderStudentForm(); toast('삭제했어요.');
     });
   });
@@ -792,7 +986,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     var b = this;
     armed(b, '기존 학생과 기록이 지워져요. 한 번 더 누르세요', function () {
       state.students = rows.map(function (r, i) { return { id: uid(), no: i + 1, name: r.name, role: r.role }; });
-      state.records = {}; state.sample = false; save();
+      state.records = {}; state.given = {}; state.sample = false; save();
       $('bulkText').value = ''; renderHeader(); renderStudentForm(); toast(rows.length + '명으로 바꿨어요.');
     });
   });
@@ -865,6 +1059,8 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
       if (!s || !Array.isArray(s.students) || !Array.isArray(s.habits)) throw new Error('bad');
       if (!s.records) s.records = {};
       if (!s.pin) s.pin = '0000';
+      if (!Array.isArray(s.rewards)) s.rewards = defaultRewards();
+      if (!s.given) s.given = {};
       state = s; save(); renderHeader(); renderTeacher(); toast('복원했어요.');
     } catch (e) { toast('백업 내용이 올바르지 않아요. 처음부터 끝까지 그대로 붙여 넣어 주세요.'); }
   }
@@ -875,11 +1071,11 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
     this.value = '';
   });
   $('clearRecords').addEventListener('click', function () {
-    armed(this, '정말 지울까요?', function () { state.records = {}; save(); toast('체크 기록을 지웠어요.'); });
+    armed(this, '정말 지울까요?', function () { state.records = {}; state.given = {}; save(); toast('체크·보상 기록을 지웠어요.'); });
   });
   $('resetAll').addEventListener('click', function () {
     armed(this, '정말 모두 지울까요?', function () {
-      state = { version: 1, className: '우리 반', pin: '0000', sample: false, students: [], habits: defaultHabits(), records: {} };
+      state = { version: 1, className: '우리 반', pin: '0000', sample: false, students: [], habits: defaultHabits(), records: {}, rewards: defaultRewards(), given: {} };
       save(); renderHeader(); setTab('students'); toast('모두 지웠어요. 학생을 새로 넣어 주세요.');
     });
   });
@@ -897,6 +1093,7 @@ textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
   var lastDay = todayKey();
   setInterval(function () { if (todayKey() !== lastDay) { lastDay = todayKey(); if (view === 'home') renderHome(); renderHeader(); } }, 60000);
 
+  save();
   show('home');
 })();
 </script>

@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리 반 습관 도장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: 교실 알림장 — 위에 반 이름과 날짜, 가운데에 큰 터치 카드, 다 하면 빨간 '참 잘했어요' 도장 */
+:root {
+  --paper: #EEF4FA;
+  --card: #FFFFFF;
+  --ink: #1D2B45;
+  --muted: #5A6A84;
+  --line: #D4DFEC;
+  --sky: #2F6FD6;
+  --sky-soft: #DCE8FB;
+  --leaf: #23875A;
+  --leaf-soft: #DDF3E7;
+  --sun: #FFC93C;
+  --sun-soft: #FFF3CF;
+  --stamp: #D93A28;
+  --stamp-soft: #FBE1DD;
+  --shadow: 0 1px 2px rgba(29, 43, 69, .08), 0 4px 14px rgba(29, 43, 69, .06);
+  --font-display: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --radius: 18px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111926; --card: #1A2436; --ink: #E7EEF8; --muted: #9DAEC6; --line: #2C3B54;
+    --sky: #6FA0F2; --sky-soft: #22355A; --leaf: #4CC48A; --leaf-soft: #1D3B30;
+    --sun: #F2BE3A; --sun-soft: #3D3420; --stamp: #FF6B57; --stamp-soft: #44241F;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111926; --card: #1A2436; --ink: #E7EEF8; --muted: #9DAEC6; --line: #2C3B54;
+  --sky: #6FA0F2; --sky-soft: #22355A; --leaf: #4CC48A; --leaf-soft: #1D3B30;
+  --sun: #F2BE3A; --sun-soft: #3D3420; --stamp: #FF6B57; --stamp-soft: #44241F;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 4px 14px rgba(0, 0, 0, .25);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-tap-highlight-color: transparent;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0; text-wrap: balance; line-height: 1.25; }
+.num { font-variant-numeric: tabular-nums; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 16px; padding-block: 16px 48px; display: grid; gap: 18px; }
+
+/* 상단 */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: grid; gap: 2px; min-width: 0; }
+.brand h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); }
+.today { color: var(--muted); font-size: .98rem; }
+.btn {
+  border: 1px solid var(--line); background: var(--card); border-radius: 999px;
+  padding: 8px 16px; min-height: 42px; display: inline-flex; align-items: center; gap: 6px;
+  transition: transform .08s ease, background .15s ease;
+}
+.btn:active { transform: scale(.97); }
+.btn.primary { background: var(--sky); border-color: var(--sky); color: #fff; }
+.btn.danger { color: var(--stamp); border-color: var(--stamp); }
+.btn.danger.armed { background: var(--stamp); color: #fff; }
+.btn.small { min-height: 34px; padding: 4px 12px; font-size: .92rem; }
+.btn:disabled { opacity: .45; cursor: default; }
+
+.notice {
+  background: var(--sun-soft); border: 1px dashed var(--sun); border-radius: 14px;
+  padding: 10px 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+}
+
+/* 반 진행 상황 */
+.progress { display: grid; gap: 8px; }
+.progress-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.progress-head h2 { font-size: 1.35rem; }
+.bar { height: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.bar > span { display: block; height: 100%; background: var(--leaf); border-radius: 999px; transition: width .4s ease; }
+.habit-sums { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; font-size: .92rem; }
+
+/* 학생 고르기 */
+.students { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.stu {
+  position: relative; text-align: left; border: 2px solid transparent; background: var(--card);
+  border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); display: grid; gap: 8px; min-height: 108px;
+}
+.stu:hover { border-color: var(--sky-soft); }
+.stu .no { font-family: var(--font-display); color: var(--sky); font-size: 1rem; }
+.stu .nm { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.1; }
+.dots { display: flex; gap: 6px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); background: transparent; }
+.dot.on { background: var(--leaf); border-color: var(--leaf); }
+.stu.done { border-color: var(--stamp-soft); }
+.mini-stamp {
+  position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border-radius: 50%;
+  border: 2.5px solid var(--stamp); color: var(--stamp); font-family: var(--font-display);
+  font-size: .62rem; line-height: 1.05; display: grid; place-items: center; text-align: center; transform: rotate(-14deg);
+}
+.empty { background: var(--card); border: 1px dashed var(--line); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--muted); }
+
+/* 학생 화면 */
+.me-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.me-name { display: grid; gap: 2px; }
+.me-name h2 { font-size: clamp(1.8rem, 6vw, 2.6rem); }
+.me-name .role { color: var(--muted); }
+.me-name .role b { color: var(--ink); font-weight: 400; font-family: var(--font-display); font-size: 1.1rem; }
+.habits { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.habit {
+  border: 3px solid var(--line); background: var(--card); border-radius: 22px; padding: 18px;
+  min-height: 150px; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-content: center; text-align: left;
+  box-shadow: var(--shadow); transition: transform .1s ease, background .2s ease, border-color .2s ease;
+}
+.habit:active { transform: scale(.98); }
+.habit .ico { grid-row: span 2; font-size: 2.6rem; line-height: 1; align-self: center; }
+.habit .lb { font-family: var(--font-display); font-size: 1.6rem; line-height: 1.15; }
+.habit .hn { color: var(--muted); font-size: .98rem; min-width: 0; }
+.habit .state {
+  grid-column: 1 / -1; justify-self: start; margin-top: 6px; border-radius: 999px; padding: 4px 14px;
+  font-family: var(--font-display); font-size: 1.05rem; background: var(--paper); color: var(--muted);
+}
+.habit[aria-pressed="true"] { border-color: var(--leaf); background: var(--leaf-soft); }
+.habit[aria-pressed="true"] .state { background: var(--leaf); color: #fff; }
+
+.week { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); display: grid; gap: 12px; }
+.week-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.week-head h3 { font-size: 1.2rem; }
+.streak { font-family: var(--font-display); color: var(--stamp); font-size: 1.1rem; }
+.week-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.day { display: grid; justify-items: center; gap: 6px; }
+.day .dn { font-size: .9rem; color: var(--muted); }
+.day.is-today .dn { color: var(--sky); font-weight: 700; }
+.day .cell {
+  width: min(64px, 100%); aspect-ratio: 1; max-width: 100%; border-radius: 50%; border: 2px dashed var(--line);
+  display: grid; place-items: center; font-family: var(--font-display); color: var(--muted); font-size: .95rem;
+}
+.day .cell.part { border-style: solid; border-color: var(--sun); background: var(--sun-soft); color: var(--ink); }
+.day .cell.full { border: 3px solid var(--stamp); color: var(--stamp); transform: rotate(-12deg); font-size: .78rem; line-height: 1.05; text-align: center; }
+
+/* 큰 도장 */
+.stamp-layer { position: fixed; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 40; }
+.big-stamp {
+  width: min(62vw, 300px); aspect-ratio: 1; border-radius: 50%; border: 10px solid var(--stamp);
+  color: var(--stamp); background: color-mix(in srgb, var(--card) 82%, transparent);
+  display: grid; place-items: center; text-align: center; font-family: var(--font-display);
+  font-size: clamp(2.2rem, 11vw, 3.6rem); line-height: 1.1; box-shadow: 0 0 0 6px color-mix(in srgb, var(--stamp) 25%, transparent) inset;
+  animation: thump .55s cubic-bezier(.2, 1.6, .4, 1) both;
+}
+@keyframes thump { from { transform: scale(2.2) rotate(-30deg); opacity: 0; } to { transform: scale(1) rotate(-14deg); opacity: 1; } }
+
+/* 선생님 화면 */
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
+.tab { border: 0; background: transparent; border-radius: 10px; padding: 8px 14px; font-family: var(--font-display); font-size: 1.08rem; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--sky-soft); color: var(--sky); }
+.panel { display: grid; gap: 14px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row.between { justify-content: space-between; }
+.date-label { font-family: var(--font-display); font-size: 1.25rem; }
+.table-scroll { overflow-x: auto; background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; min-width: 520px; }
+th, td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+th { font-family: var(--font-display); font-weight: 400; color: var(--muted); font-size: 1rem; background: var(--card); }
+td.left, th.left { text-align: left; }
+tbody tr:last-child td { border-bottom: 0; }
+tfoot td { border-top: 2px solid var(--line); border-bottom: 0; color: var(--muted); }
+.tog {
+  width: 38px; height: 38px; border-radius: 10px; border: 2px solid var(--line); background: transparent;
+  display: inline-grid; place-items: center; font-size: 1.1rem; color: transparent;
+}
+.tog[aria-pressed="true"] { background: var(--leaf); border-color: var(--leaf); color: #fff; }
+.badge { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: .88rem; }
+.badge.full { background: var(--stamp-soft); color: var(--stamp); }
+.badge.part { background: var(--sun-soft); color: var(--ink); }
+.badge.none { background: var(--paper); color: var(--muted); }
+.wk { display: inline-flex; gap: 3px; }
+.wk i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); display: inline-block; }
+.wk i.on { background: var(--leaf); }
+.wk.full i { background: var(--stamp); }
+
+.missing { display: grid; gap: 8px; }
+.missing-row { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.missing-row b { font-family: var(--font-display); font-weight: 400; min-width: 6em; }
+
+.form-list { display: grid; gap: 8px; }
+.form-row {
+  display: grid; grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: 8px; align-items: center;
+  background: var(--card); border-radius: 14px; padding: 8px; box-shadow: var(--shadow);
+}
+.form-row.habit-row { grid-template-columns: 64px minmax(0, 1fr) minmax(0, 1.4fr) auto auto; }
+input[type="text"], input[type="number"], input[type="password"], textarea {
+  width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--paper); border-radius: 10px; padding: 8px 10px;
+}
+textarea { min-height: 120px; resize: vertical; font-size: .9rem; }
+.check-inline { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; font-size: .92rem; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; display: grid; gap: 10px; }
+.card h3 { font-size: 1.2rem; }
+.help { color: var(--muted); font-size: .92rem; margin: 0; }
+@media (max-width: 640px) {
+  .form-row, .form-row.habit-row { grid-template-columns: 56px minmax(0, 1fr); }
+  .form-row > :nth-child(n+3) { grid-column: 1 / -1; }
+}
+
+/* 비밀번호 창 */
+.modal { position: fixed; inset: 0; background: rgba(10, 18, 32, .45); display: grid; place-items: center; z-index: 50; padding: 16px; }
+.pin-box { background: var(--card); border-radius: 22px; padding: 22px; width: min(340px, 100%); display: grid; gap: 14px; justify-items: center; box-shadow: var(--shadow); }
+.pin-dots { display: flex; gap: 12px; }
+.pin-dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--muted); }
+.pin-dots i.on { background: var(--ink); border-color: var(--ink); }
+.pin-pad { display: grid; grid-template-columns: repeat(3, 72px); gap: 10px; }
+.pin-pad button { height: 60px; border-radius: 16px; border: 1px solid var(--line); background: var(--paper); font-family: var(--font-display); font-size: 1.5rem; }
+.pin-msg { min-height: 1.4em; color: var(--stamp); font-size: .92rem; }
+.shake { animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  background: var(--ink); color: var(--paper); border-radius: 999px; padding: 10px 18px; z-index: 60; box-shadow: var(--shadow);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1 id="className">우리 반 습관 도장</h1>
+      <div class="today" id="todayLabel"></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="homeBtn" type="button" hidden>처음으로</button>
+      <button class="btn" id="teacherBtn" type="button">선생님</button>
+    </div>
+  </header>
+
+  <div class="notice" id="sampleNotice" hidden>
+    <span>지금 보이는 학생과 기록은 <b>예시</b>예요. 선생님 메뉴에서 우리 반 학생으로 바꿔 주세요.</span>
+    <button class="btn small" type="button" id="openSetupBtn">우리 반 학생 넣기</button>
+  </div>
+
+  <!-- 1. 학생 고르기 -->
+  <main id="viewHome" class="panel">
+    <section class="progress">
+      <div class="progress-head">
+        <h2>내 이름을 눌러 오늘 습관을 체크해요</h2>
+        <span class="num" id="classCount"></span>
+      </div>
+      <div class="bar"><span id="classBar" style="width:0"></span></div>
+      <div class="habit-sums" id="habitSums"></div>
+    </section>
+    <section class="students" id="studentGrid"></section>
+  </main>
+
+  <!-- 2. 학생 체크 화면 -->
+  <main id="viewStudent" class="panel" hidden>
+    <div class="me-head">
+      <div class="me-name">
+        <h2 id="meName"></h2>
+        <div class="role" id="meRole"></div>
+      </div>
+      <button class="btn primary" type="button" id="doneBtn">다 했어요</button>
+    </div>
+    <section class="habits" id="habitCards"></section>
+    <section class="week">
+      <div class="week-head">
+        <h3>이번 주 내 도장</h3>
+        <span class="streak" id="meStreak"></span>
+      </div>
+      <div class="week-row" id="meWeek"></div>
+    </section>
+  </main>
+
+  <!-- 3. 선생님 화면 -->
+  <main id="viewTeacher" class="panel" hidden>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-tab="today" aria-selected="true" type="button">오늘 현황</button>
+      <button class="tab" role="tab" data-tab="week" aria-selected="false" type="button">주간 기록</button>
+      <button class="tab" role="tab" data-tab="students" aria-selected="false" type="button">학생·1인1역</button>
+      <button class="tab" role="tab" data-tab="habits" aria-selected="false" type="button">습관 항목</button>
+      <button class="tab" role="tab" data-tab="settings" aria-selected="false" type="button">설정·백업</button>
+    </div>
+
+    <section class="panel" data-panel="today">
+      <div class="row between">
+        <div class="row">
+          <button class="btn small" type="button" id="dayPrev" aria-label="전날">◀</button>
+          <span class="date-label" id="dayLabel"></span>
+          <button class="btn small" type="button" id="dayNext" aria-label="다음 날">▶</button>
+          <button class="btn small" type="button" id="dayToday">오늘</button>
+        </div>
+        <span class="help">칸을 눌러 기록을 고칠 수 있어요.</span>
+      </div>
+      <div class="table-scroll"><table id="dayTable"></table></div>
+      <div class="card">
+        <h3>아직 안 한 친구</h3>
+        <div class="missing" id="missingList"></div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="week" hidden>
+      <div class="row between">
+        <div class="row">
+          <button class="btn small" type="button" id="weekPrev" aria-label="지난주">◀</button>
+          <span class="date-label" id="weekLabel"></span>
+          <button class="btn small" type="button" id="weekNext" aria-label="다음 주">▶</button>
+          <button class="btn small" type="button" id="weekThis">이번 주</button>
+        </div>
+        <button class="btn small" type="button" id="weekCsv">표 복사 (엑셀 붙여넣기용)</button>
+      </div>
+      <div class="table-scroll"><table id="weekTable"></table></div>
+      <p class="help">동그라미 하나가 습관 하나예요. 빨간색은 그날 모든 습관을 다 한 날이에요.</p>
+    </section>
+
+    <section class="panel" data-panel="students" hidden>
+      <div class="card">
+        <h3>학생과 1인1역</h3>
+        <p class="help">번호, 이름, 맡은 역할을 적어 주세요. 고친 내용은 바로 저장돼요.</p>
+        <div class="form-list" id="studentForm"></div>
+        <div class="row"><button class="btn" type="button" id="addStudent">학생 한 명 추가</button></div>
+      </div>
+      <div class="card">
+        <h3>한꺼번에 넣기</h3>
+        <p class="help">한 줄에 한 명씩 <b>이름</b> 또는 <b>이름, 역할</b>로 적으면 번호가 차례대로 붙어요. 엑셀에서 두 칸을 복사해 붙여도 돼요.</p>
+        <textarea id="bulkText" placeholder="김하늘, 칠판 정리&#10;이도윤, 우유 나르기&#10;박서아"></textarea>
+        <div class="row">
+          <button class="btn primary" type="button" id="bulkReplace">이 명단으로 바꾸기</button>
+          <button class="btn" type="button" id="bulkAppend">뒤에 추가하기</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="habits" hidden>
+      <div class="card">
+        <h3>매일 체크할 습관</h3>
+        <p class="help">그림(이모지), 이름, 설명을 고칠 수 있어요. ‘역할 표시’를 켜면 설명 자리에 학생마다 맡은 1인1역이 보여요. 최대 6개까지 만들 수 있어요.</p>
+        <div class="form-list" id="habitForm"></div>
+        <div class="row"><button class="btn" type="button" id="addHabit">습관 추가</button></div>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="settings" hidden>
+      <div class="card">
+        <h3>반 이름</h3>
+        <input type="text" id="classNameInput" maxlength="30">
+      </div>
+      <div class="card">
+        <h3>선생님 비밀번호 (숫자 4자리)</h3>
+        <div class="row">
+          <input type="password" id="pinInput" inputmode="numeric" maxlength="4" style="max-width:160px" placeholder="새 비밀번호">
+          <button class="btn" type="button" id="pinSave">바꾸기</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>백업과 복원</h3>
+        <p class="help">기록은 이 기기의 브라우저에만 저장돼요. 브라우저 기록을 지우면 사라지니, 한 달에 한 번쯤 백업해 두세요.</p>
+        <div class="row">
+          <button class="btn" type="button" id="backupFile">백업 파일 저장</button>
+          <button class="btn" type="button" id="backupCopy">백업 내용 복사</button>
+          <label class="btn" for="restoreFile">백업 파일 불러오기</label>
+          <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+        </div>
+        <textarea id="restoreText" placeholder="복사해 둔 백업 내용을 여기에 붙여 넣고 ‘붙여 넣은 내용으로 복원’을 누르세요."></textarea>
+        <div class="row"><button class="btn" type="button" id="restoreBtn">붙여 넣은 내용으로 복원</button></div>
+      </div>
+      <div class="card">
+        <h3>처음부터 다시</h3>
+        <div class="row">
+          <button class="btn danger" type="button" id="clearRecords">체크 기록만 지우기</button>
+          <button class="btn danger" type="button" id="resetAll">모두 지우기</button>
+        </div>
+        <p class="help">버튼을 한 번 더 누르면 지워져요.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="stamp-layer" id="stampLayer" hidden><div class="big-stamp">참<br>잘했어요</div></div>
+
+<div class="modal" id="pinModal" hidden>
+  <div class="pin-box" id="pinBox">
+    <h3>선생님 비밀번호</h3>
+    <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+    <div class="pin-msg" id="pinMsg"></div>
+    <div class="pin-pad" id="pinPad"></div>
+    <button class="btn small" type="button" id="pinCancel">닫기</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'habit-stamp-v1';
+  var DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
+  // ---------- 날짜 ----------
+  function keyOf(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function parseKey(k) { var p = k.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function mondayOf(d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); var w = x.getDay(); return addDays(x, w === 0 ? -6 : 1 - w); }
+  function isWeekend(d) { return d.getDay() === 0 || d.getDay() === 6; }
+  function longDate(d) { return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + DAY_NAMES[d.getDay()] + '요일'; }
+  function shortDate(d) { return (d.getMonth() + 1) + '/' + d.getDate(); }
+  function todayKey() { return keyOf(new Date()); }
+
+  // ---------- 저장 ----------
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function defaultHabits() {
+    return [
+      { id: 'brush', icon: '🪥', label: '양치질', hint: '점심 먹고 3분 동안 깨끗이', role: false },
+      { id: 'morning', icon: '📚', label: '아침활동', hint: '아침 독서와 활동을 끝까지', role: false },
+      { id: 'job', icon: '🧹', label: '1인1역', hint: '내 역할을 책임감 있게', role: true }
+    ];
+  }
+  function sampleState() {
+    var names = [
+      ['김하늘', '칠판 정리'], ['이도윤', '우유 나르기'], ['박서아', '창문 열고 닫기'], ['최지호', '화분 물 주기'],
+      ['정하은', '분리수거'], ['강민준', '출석부 전달'], ['윤채원', '책상 줄 맞추기'], ['임시우', '교실 불 끄기']
+    ];
+    var students = names.map(function (n, i) { return { id: uid(), no: i + 1, name: n[0], role: n[1] }; });
+    var habits = defaultHabits();
+    var records = {};
+    var mon = mondayOf(new Date());
+    var tk = todayKey();
+    // 이번 주 지난 날짜와 오늘 일부에 예시 기록을 채운다
+    for (var d = 0; d < 5; d++) {
+      var day = addDays(mon, d), k = keyOf(day);
+      if (k > tk) break;
+      records[k] = {};
+      students.forEach(function (s, si) {
+        var list = habits.filter(function (h, hi) { return ((si * 7 + d * 3 + hi * 5) % (k === tk ? 4 : 6)) !== 0; })
+          .map(function (h) { return h.id; });
+        if (k === tk && si % 3 === 2) list = [];
+        if (list.length) records[k][s.id] = list;
+      });
+    }
+    return { version: 1, className: '3학년 2반', pin: '0000', sample: true, students: students, habits: habits, records: records };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var s = JSON.parse(raw); if (s && Array.isArray(s.students) && Array.isArray(s.habits)) return s; }
+    } catch (e) { /* 저장소를 쓸 수 없으면 예시로 시작 */ }
+    return sampleState();
+  }
+  var state = load();
+  if (!state.records) state.records = {};
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { toast('이 브라우저에는 저장할 수 없어요. 백업을 이용해 주세요.'); }
+  }
+
+  // ---------- 도우미 ----------
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function sortedStudents() { return state.students.slice().sort(function (a, b) { return (a.no || 999) - (b.no || 999); }); }
+  function doneList(k, sid) { var r = state.records[k]; return (r && r[sid]) || []; }
+  function isDone(k, sid, hid) { return doneList(k, sid).indexOf(hid) >= 0; }
+  function doneCount(k, sid) { var l = doneList(k, sid); return state.habits.filter(function (h) { return l.indexOf(h.id) >= 0; }).length; }
+  function allDone(k, sid) { return state.habits.length > 0 && doneCount(k, sid) === state.habits.length; }
+  function setDone(k, sid, hid, on) {
+    if (!state.records[k]) state.records[k] = {};
+    var l = (state.records[k][sid] || []).filter(function (x) { return x !== hid; });
+    if (on) l.push(hid);
+    if (l.length) state.records[k][sid] = l; else delete state.records[k][sid];
+    if (!Object.keys(state.records[k]).length) delete state.records[k];
+    save();
+  }
+  function streak(sid) {
+    var d = new Date(), n = 0, guard = 0;
+    if (!allDone(keyOf(d), sid)) d = addDays(d, -1);
+    while (guard++ < 400) {
+      if (isWeekend(d)) { d = addDays(d, -1); continue; }
+      if (!allDone(keyOf(d), sid)) break;
+      n++; d = addDays(d, -1);
+    }
+    return n;
+  }
+  function habitHint(h, s) { return h.role ? (s && s.role ? '내 역할: ' + s.role : '선생님께 역할을 여쭤봐요') : h.hint; }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 2200);
+  }
+  // 두 번 눌러야 실행되는 위험한 버튼
+  function armed(btn, label, fn) {
+    if (btn.classList.contains('armed')) { btn.classList.remove('armed'); btn.textContent = btn.dataset.label; fn(); return; }
+    btn.dataset.label = btn.textContent; btn.textContent = label; btn.classList.add('armed');
+    setTimeout(function () { if (btn.classList.contains('armed')) { btn.classList.remove('armed'); btn.textContent = btn.dataset.label; } }, 3500);
+  }
+  function copyText(text, okMsg) {
+    var done = function () { toast(okMsg); };
+    var fallback = function () {
+      var ta = $('restoreText'); ta.value = text; ta.focus(); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { toast('아래 칸의 내용을 직접 복사해 주세요.'); }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
+    else fallback();
+  }
+
+  // ---------- 화면 전환 ----------
+  var view = 'home', currentStudent = null, idleTimer = null;
+  function show(v) {
+    view = v;
+    $('viewHome').hidden = v !== 'home';
+    $('viewStudent').hidden = v !== 'student';
+    $('viewTeacher').hidden = v !== 'teacher';
+    $('homeBtn').hidden = v === 'home';
+    $('teacherBtn').hidden = v === 'teacher';
+    clearTimeout(idleTimer);
+    $('stampLayer').hidden = true;
+    if (v === 'student') bumpIdle();
+    renderHeader();
+    if (v === 'home') renderHome();
+    if (v === 'student') renderStudent();
+    if (v === 'teacher') renderTeacher();
+    window.scrollTo(0, 0);
+  }
+  // 함께 쓰는 태블릿: 학생 화면에서 40초 동안 아무것도 안 하면 처음 화면으로
+  function bumpIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(function () { if (view === 'student') show('home'); }, 40000); }
+
+  function renderHeader() {
+    $('className').textContent = (state.className || '우리 반') + ' 습관 도장';
+    $('todayLabel').textContent = longDate(new Date());
+    $('sampleNotice').hidden = !state.sample;
+    document.title = (state.className || '우리 반') + ' 습관 도장';
+  }
+
+  // ---------- 1. 처음 화면 ----------
+  function renderHome() {
+    var tk = todayKey(), list = sortedStudents();
+    var full = list.filter(function (s) { return allDone(tk, s.id); }).length;
+    $('classCount').textContent = list.length ? '오늘 다 한 친구 ' + full + ' / ' + list.length + '명' : '';
+    $('classBar').style.width = list.length ? (full / list.length * 100) + '%' : '0';
+    $('habitSums').innerHTML = state.habits.map(function (h) {
+      var c = list.filter(function (s) { return isDone(tk, s.id, h.id); }).length;
+      return '<span class="chip num">' + esc(h.icon) + ' ' + esc(h.label) + ' ' + c + '명</span>';
+    }).join('');
+    if (!list.length) {
+      $('studentGrid').innerHTML = '<div class="empty">아직 학생이 없어요. 오른쪽 위 <b>선생님</b>을 눌러 학생을 넣어 주세요.</div>';
+      return;
+    }
+    $('studentGrid').innerHTML = list.map(function (s) {
+      var dots = state.habits.map(function (h) { return '<span class="dot' + (isDone(tk, s.id, h.id) ? ' on' : '') + '"></span>'; }).join('');
+      var ok = allDone(tk, s.id);
+      return '<button type="button" class="stu' + (ok ? ' done' : '') + '" data-sid="' + s.id + '">' +
+        '<span class="no num">' + esc(s.no) + '번</span><span class="nm">' + esc(s.name) + '</span>' +
+        '<span class="dots" aria-label="' + doneCount(tk, s.id) + '개 완료">' + dots + '</span>' +
+        (ok ? '<span class="mini-stamp">참<br>잘했어요</span>' : '') + '</button>';
+    }).join('');
+  }
+  $('studentGrid').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-sid]'); if (!b) return;
+    currentStudent = b.dataset.sid; show('student');
+  });
+
+  // ---------- 2. 학생 화면 ----------
+  function renderStudent() {
+    var s = state.students.find(function (x) { return x.id === currentStudent; });
+    if (!s) { show('home'); return; }
+    var tk = todayKey();
+    $('meName').textContent = s.name;
+    $('meRole').innerHTML = s.role ? '내 1인1역 <b>' + esc(s.role) + '</b>' : '오늘도 멋진 하루를 보내요';
+    $('habitCards').innerHTML = state.habits.map(function (h) {
+      var on = isDone(tk, s.id, h.id);
+      return '<button type="button" class="habit" data-hid="' + esc(h.id) + '" aria-pressed="' + on + '">' +
+        '<span class="ico" aria-hidden="true">' + esc(h.icon) + '</span>' +
+        '<span class="lb">' + esc(h.label) + '</span><span class="hn">' + esc(habitHint(h, s)) + '</span>' +
+        '<span class="state">' + (on ? '했어요 ✓' : '눌러서 체크') + '</span></button>';
+    }).join('');
+    var mon = mondayOf(new Date());
+    var cells = '';
+    for (var i = 0; i < 5; i++) {
+      var d = addDays(mon, i), k = keyOf(d), c = doneCount(k, s.id), full = allDone(k, s.id);
+      cells += '<div class="day' + (k === tk ? ' is-today' : '') + '"><span class="dn">' + DAY_NAMES[d.getDay()] + ' ' + shortDate(d) + '</span>' +
+        '<span class="cell num ' + (full ? 'full' : c ? 'part' : '') + '">' + (full ? '참<br>잘했어요' : c ? c + '/' + state.habits.length : '') + '</span></div>';
+    }
+    $('meWeek').innerHTML = cells;
+    var st = streak(s.id);
+    $('meStreak').textContent = st > 0 ? st + '일 연속으로 다 했어요!' : '오늘부터 도장을 모아 봐요';
+  }
+  $('habitCards').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-hid]'); if (!b) return;
+    var tk = todayKey(), sid = currentStudent, hid = b.dataset.hid;
+    var was = allDone(tk, sid);
+    setDone(tk, sid, hid, !isDone(tk, sid, hid));
+    renderStudent();
+    if (!was && allDone(tk, sid)) stamp();
+  });
+  $('viewStudent').addEventListener('pointerdown', bumpIdle);
+  $('doneBtn').addEventListener('click', function () { show('home'); });
+
+  function stamp() {
+    var l = $('stampLayer'); l.hidden = true; void l.offsetWidth; l.hidden = false;
+    setTimeout(function () { l.hidden = true; }, 1800);
+  }
+
+  // ---------- 비밀번호 ----------
+  var pinBuf = '', pinOk = null;
+  function openPin(onOk) {
+    pinBuf = ''; pinOk = onOk;
+    $('pinMsg').textContent = state.pin === '0000' ? '처음 비밀번호는 0000이에요.' : '';
+    drawPin(); $('pinModal').hidden = false;
+  }
+  function drawPin() {
+    Array.prototype.forEach.call($('pinDots').children, function (d, i) { d.classList.toggle('on', i < pinBuf.length); });
+  }
+  $('pinPad').innerHTML = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].map(function (k) {
+    return k ? '<button type="button" data-k="' + k + '"' + (k === '⌫' ? ' aria-label="지우기"' : '') + '>' + k + '</button>' : '<span></span>';
+  }).join('');
+  function pinKey(k) {
+    if (k === '⌫') pinBuf = pinBuf.slice(0, -1); else if (pinBuf.length < 4) pinBuf += k;
+    drawPin();
+    if (pinBuf.length === 4) {
+      if (pinBuf === String(state.pin)) { $('pinModal').hidden = true; var f = pinOk; pinOk = null; if (f) f(); }
+      else {
+        $('pinMsg').textContent = '비밀번호가 달라요.'; pinBuf = '';
+        var box = $('pinBox'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+        setTimeout(drawPin, 250);
+      }
+    }
+  }
+  $('pinPad').addEventListener('click', function (e) { var b = e.target.closest('[data-k]'); if (b) pinKey(b.dataset.k); });
+  document.addEventListener('keydown', function (e) {
+    if ($('pinModal').hidden) return;
+    if (/^[0-9]$/.test(e.key)) pinKey(e.key);
+    else if (e.key === 'Backspace') pinKey('⌫');
+    else if (e.key === 'Escape') $('pinModal').hidden = true;
+  });
+  $('pinCancel').addEventListener('click', function () { $('pinModal').hidden = true; });
+
+  // ---------- 3. 선생님 화면 ----------
+  var tab = 'today', dayCursor = new Date(), weekCursor = mondayOf(new Date());
+  function setTab(t) {
+    tab = t;
+    document.querySelectorAll('.tab').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === t)); });
+    document.querySelectorAll('[data-panel]').forEach(function (p) { p.hidden = p.dataset.panel !== t; });
+    renderTeacher();
+  }
+  document.querySelector('.tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) setTab(b.dataset.tab); });
+
+  function renderTeacher() {
+    if (tab === 'today') renderDay();
+    if (tab === 'week') renderWeek();
+    if (tab === 'students') renderStudentForm();
+    if (tab === 'habits') renderHabitForm();
+    if (tab === 'settings') $('classNameInput').value = state.className || '';
+  }
+
+  function renderDay() {
+    var k = keyOf(dayCursor), list = sortedStudents();
+    $('dayLabel').textContent = longDate(dayCursor) + (k === todayKey() ? ' (오늘)' : '');
+    $('dayNext').disabled = k >= todayKey();
+    var head = '<thead><tr><th>번호</th><th class="left">이름</th>' +
+      state.habits.map(function (h) { return '<th>' + esc(h.icon) + ' ' + esc(h.label) + '</th>'; }).join('') + '<th>결과</th></tr></thead>';
+    var body = list.map(function (s) {
+      var c = doneCount(k, s.id), n = state.habits.length;
+      return '<tr><td class="num">' + esc(s.no) + '</td><td class="left">' + esc(s.name) + '</td>' +
+        state.habits.map(function (h) {
+          var on = isDone(k, s.id, h.id);
+          return '<td><button type="button" class="tog" data-sid="' + s.id + '" data-hid="' + esc(h.id) + '" aria-pressed="' + on + '" aria-label="' + esc(s.name + ' ' + h.label) + '">✓</button></td>';
+        }).join('') +
+        '<td><span class="badge num ' + (n && c === n ? 'full' : c ? 'part' : 'none') + '">' + c + '/' + n + '</span></td></tr>';
+    }).join('');
+    var foot = '<tfoot><tr><td></td><td class="left">합계</td>' + state.habits.map(function (h) {
+      return '<td class="num">' + list.filter(function (s) { return isDone(k, s.id, h.id); }).length + '명</td>';
+    }).join('') + '<td class="num">' + list.filter(function (s) { return allDone(k, s.id); }).length + '명</td></tr></tfoot>';
+    $('dayTable').innerHTML = head + '<tbody>' + body + '</tbody>' + foot;
+    $('missingList').innerHTML = state.habits.map(function (h) {
+      var miss = list.filter(function (s) { return !isDone(k, s.id, h.id); });
+      return '<div class="missing-row"><b>' + esc(h.icon + ' ' + h.label) + '</b>' +
+        (miss.length ? miss.map(function (s) { return '<span class="chip">' + esc(s.no + '. ' + s.name) + '</span>'; }).join('') : '<span class="help">모두 했어요!</span>') + '</div>';
+    }).join('');
+  }
+  $('dayTable').addEventListener('click', function (e) {
+    var b = e.target.closest('.tog'); if (!b) return;
+    var k = keyOf(dayCursor);
+    setDone(k, b.dataset.sid, b.dataset.hid, !isDone(k, b.dataset.sid, b.dataset.hid));
+    renderDay();
+  });
+  $('dayPrev').addEventListener('click', function () { dayCursor = addDays(dayCursor, -1); renderDay(); });
+  $('dayNext').addEventListener('click', function () { dayCursor = addDays(dayCursor, 1); renderDay(); });
+  $('dayToday').addEventListener('click', function () { dayCursor = new Date(); renderDay(); });
+
+  function weekDays() { var a = []; for (var i = 0; i < 5; i++) a.push(addDays(weekCursor, i)); return a; }
+  function renderWeek() {
+    var days = weekDays(), list = sortedStudents(), n = state.habits.length, tk = todayKey();
+    $('weekLabel').textContent = shortDate(days[0]) + ' ~ ' + shortDate(days[4]);
+    $('weekNext').disabled = keyOf(addDays(weekCursor, 7)) > tk;
+    var head = '<thead><tr><th>번호</th><th class="left">이름</th>' + days.map(function (d) {
+      return '<th>' + DAY_NAMES[d.getDay()] + ' <span class="num">' + shortDate(d) + '</span></th>';
+    }).join('') + '<th>달성률</th><th>도장</th></tr></thead>';
+    var body = list.map(function (s) {
+      var got = 0, possible = 0, stamps = 0;
+      var cells = days.map(function (d) {
+        var k = keyOf(d);
+        if (k > tk) return '<td></td>';
+        var c = doneCount(k, s.id), full = n && c === n;
+        got += c; possible += n; if (full) stamps++;
+        var dots = state.habits.map(function (h) { return '<i' + (isDone(k, s.id, h.id) ? ' class="on"' : '') + '></i>'; }).join('');
+        return '<td><span class="wk' + (full ? ' full' : '') + '" aria-label="' + c + '/' + n + '">' + dots + '</span></td>';
+      }).join('');
+      var pct = possible ? Math.round(got / possible * 100) : 0;
+      return '<tr><td class="num">' + esc(s.no) + '</td><td class="left">' + esc(s.name) + '</td>' + cells +
+        '<td class="num">' + (possible ? pct + '%' : '-') + '</td><td class="num">' + stamps + '개</td></tr>';
+    }).join('');
+    $('weekTable').innerHTML = head + '<tbody>' + body + '</tbody>';
+  }
+  $('weekPrev').addEventListener('click', function () { weekCursor = addDays(weekCursor, -7); renderWeek(); });
+  $('weekNext').addEventListener('click', function () { weekCursor = addDays(weekCursor, 7); renderWeek(); });
+  $('weekThis').addEventListener('click', function () { weekCursor = mondayOf(new Date()); renderWeek(); });
+  $('weekCsv').addEventListener('click', function () {
+    var days = weekDays(), rows = [];
+    rows.push(['번호', '이름', '역할'].concat(days.map(function (d) { return DAY_NAMES[d.getDay()] + ' ' + shortDate(d); })).concat(['다 한 날']).join('\t'));
+    sortedStudents().forEach(function (s) {
+      var stamps = 0;
+      var cells = days.map(function (d) {
+        var k = keyOf(d), l = doneList(k, s.id);
+        if (allDone(k, s.id)) stamps++;
+        return state.habits.filter(function (h) { return l.indexOf(h.id) >= 0; }).map(function (h) { return h.label; }).join('·') || '-';
+      });
+      rows.push([s.no, s.name, s.role || ''].concat(cells).concat([stamps]).join('\t'));
+    });
+    copyText(rows.join('\n'), '복사했어요. 엑셀이나 한글 표에 붙여 넣으세요.');
+  });
+
+  // 학생 관리
+  function leaveSample() { if (state.sample) { state.sample = false; renderHeader(); } }
+  function renderStudentForm() {
+    var list = sortedStudents();
+    $('studentForm').innerHTML = list.length ? list.map(function (s) {
+      return '<div class="form-row" data-sid="' + s.id + '">' +
+        '<input type="number" min="1" data-f="no" id="no-' + s.id + '" value="' + esc(s.no) + '" aria-label="번호">' +
+        '<input type="text" data-f="name" id="nm-' + s.id + '" value="' + esc(s.name) + '" placeholder="이름" aria-label="이름">' +
+        '<input type="text" data-f="role" id="rl-' + s.id + '" value="' + esc(s.role) + '" placeholder="1인1역 (예: 칠판 정리)" aria-label="1인1역">' +
+        '<button type="button" class="btn small danger" data-del>삭제</button></div>';
+    }).join('') : '<p class="help">아직 학생이 없어요.</p>';
+  }
+  $('studentForm').addEventListener('input', function (e) {
+    var row = e.target.closest('[data-sid]'), f = e.target.dataset.f; if (!row || !f) return;
+    var s = state.students.find(function (x) { return x.id === row.dataset.sid; }); if (!s) return;
+    s[f] = f === 'no' ? (parseInt(e.target.value, 10) || '') : e.target.value;
+    leaveSample(); save();
+  });
+  $('studentForm').addEventListener('change', function (e) { if (e.target.dataset.f === 'no') renderStudentForm(); });
+  $('studentForm').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    var sid = b.closest('[data-sid]').dataset.sid;
+    armed(b, '정말 삭제?', function () {
+      state.students = state.students.filter(function (x) { return x.id !== sid; });
+      Object.keys(state.records).forEach(function (k) { delete state.records[k][sid]; });
+      leaveSample(); save(); renderStudentForm(); toast('삭제했어요.');
+    });
+  });
+  $('addStudent').addEventListener('click', function () {
+    var max = state.students.reduce(function (m, s) { return Math.max(m, +s.no || 0); }, 0);
+    var s = { id: uid(), no: max + 1, name: '', role: '' };
+    state.students.push(s); leaveSample(); save(); renderStudentForm();
+    var el = $('nm-' + s.id); if (el) el.focus();
+  });
+  function parseBulk() {
+    return $('bulkText').value.split(/\r?\n/).map(function (line) {
+      var p = line.split(/\t|,/).map(function (x) { return x.trim(); });
+      return p[0] ? { name: p[0], role: p.slice(1).join(', ') } : null;
+    }).filter(Boolean);
+  }
+  $('bulkReplace').addEventListener('click', function () {
+    var rows = parseBulk(); if (!rows.length) { toast('명단을 먼저 적어 주세요.'); return; }
+    var b = this;
+    armed(b, '기존 학생과 기록이 지워져요. 한 번 더 누르세요', function () {
+      state.students = rows.map(function (r, i) { return { id: uid(), no: i + 1, name: r.name, role: r.role }; });
+      state.records = {}; state.sample = false; save();
+      $('bulkText').value = ''; renderHeader(); renderStudentForm(); toast(rows.length + '명으로 바꿨어요.');
+    });
+  });
+  $('bulkAppend').addEventListener('click', function () {
+    var rows = parseBulk(); if (!rows.length) { toast('명단을 먼저 적어 주세요.'); return; }
+    var max = state.students.reduce(function (m, s) { return Math.max(m, +s.no || 0); }, 0);
+    rows.forEach(function (r, i) { state.students.push({ id: uid(), no: max + i + 1, name: r.name, role: r.role }); });
+    leaveSample(); save(); $('bulkText').value = ''; renderStudentForm(); toast(rows.length + '명을 추가했어요.');
+  });
+
+  // 습관 관리
+  function renderHabitForm() {
+    $('habitForm').innerHTML = state.habits.map(function (h) {
+      return '<div class="form-row habit-row" data-hid="' + esc(h.id) + '">' +
+        '<input type="text" data-f="icon" id="ic-' + esc(h.id) + '" value="' + esc(h.icon) + '" maxlength="4" aria-label="그림" style="text-align:center;font-size:1.3rem">' +
+        '<input type="text" data-f="label" id="lb-' + esc(h.id) + '" value="' + esc(h.label) + '" placeholder="습관 이름" aria-label="습관 이름">' +
+        '<input type="text" data-f="hint" id="hn-' + esc(h.id) + '" value="' + esc(h.hint) + '" placeholder="학생에게 보일 설명" aria-label="설명">' +
+        '<label class="check-inline"><input type="checkbox" data-f="role" id="ro-' + esc(h.id) + '"' + (h.role ? ' checked' : '') + '> 역할 표시</label>' +
+        '<button type="button" class="btn small danger" data-del>삭제</button></div>';
+    }).join('');
+    $('addHabit').disabled = state.habits.length >= 6;
+  }
+  $('habitForm').addEventListener('input', function (e) {
+    var row = e.target.closest('[data-hid]'), f = e.target.dataset.f; if (!row || !f) return;
+    var h = state.habits.find(function (x) { return x.id === row.dataset.hid; }); if (!h) return;
+    h[f] = f === 'role' ? e.target.checked : e.target.value; save();
+  });
+  $('habitForm').addEventListener('change', function (e) {
+    if (e.target.dataset.f !== 'role') return;
+    var h = state.habits.find(function (x) { return x.id === e.target.closest('[data-hid]').dataset.hid; });
+    if (h) { h.role = e.target.checked; save(); }
+  });
+  $('habitForm').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    var hid = b.closest('[data-hid]').dataset.hid;
+    armed(b, '정말 삭제?', function () {
+      state.habits = state.habits.filter(function (x) { return x.id !== hid; });
+      save(); renderHabitForm(); toast('삭제했어요.');
+    });
+  });
+  $('addHabit').addEventListener('click', function () {
+    if (state.habits.length >= 6) return;
+    var h = { id: 'h' + uid(), icon: '⭐', label: '', hint: '', role: false };
+    state.habits.push(h); save(); renderHabitForm();
+    var el = $('lb-' + h.id); if (el) el.focus();
+  });
+
+  // 설정
+  $('classNameInput').addEventListener('input', function () { state.className = this.value; save(); renderHeader(); });
+  $('pinSave').addEventListener('click', function () {
+    var v = $('pinInput').value.trim();
+    if (!/^\d{4}$/.test(v)) { toast('숫자 4자리로 적어 주세요.'); return; }
+    state.pin = v; save(); $('pinInput').value = ''; toast('비밀번호를 바꿨어요.');
+  });
+  function backupJson() { return JSON.stringify(state, null, 1); }
+  $('backupFile').addEventListener('click', function () {
+    try {
+      var blob = new Blob([backupJson()], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = '습관도장-백업-' + todayKey() + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      toast('백업 파일을 저장했어요. 저장이 안 되면 ‘백업 내용 복사’를 써 주세요.');
+    } catch (e) { toast('파일 저장이 막혀 있어요. ‘백업 내용 복사’를 써 주세요.'); }
+  });
+  $('backupCopy').addEventListener('click', function () { copyText(backupJson(), '백업 내용을 복사했어요. 메모장 등에 붙여 두세요.'); });
+  function restore(text) {
+    try {
+      var s = JSON.parse(text);
+      if (!s || !Array.isArray(s.students) || !Array.isArray(s.habits)) throw new Error('bad');
+      if (!s.records) s.records = {};
+      if (!s.pin) s.pin = '0000';
+      state = s; save(); renderHeader(); renderTeacher(); toast('복원했어요.');
+    } catch (e) { toast('백업 내용이 올바르지 않아요. 처음부터 끝까지 그대로 붙여 넣어 주세요.'); }
+  }
+  $('restoreBtn').addEventListener('click', function () { restore($('restoreText').value); });
+  $('restoreFile').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var r = new FileReader(); r.onload = function () { restore(String(r.result)); }; r.readAsText(f);
+    this.value = '';
+  });
+  $('clearRecords').addEventListener('click', function () {
+    armed(this, '정말 지울까요?', function () { state.records = {}; save(); toast('체크 기록을 지웠어요.'); });
+  });
+  $('resetAll').addEventListener('click', function () {
+    armed(this, '정말 모두 지울까요?', function () {
+      state = { version: 1, className: '우리 반', pin: '0000', sample: false, students: [], habits: defaultHabits(), records: {} };
+      save(); renderHeader(); setTab('students'); toast('모두 지웠어요. 학생을 새로 넣어 주세요.');
+    });
+  });
+
+  // ---------- 상단 버튼 ----------
+  $('homeBtn').addEventListener('click', function () { show('home'); });
+  $('teacherBtn').addEventListener('click', function () {
+    openPin(function () { dayCursor = new Date(); weekCursor = mondayOf(new Date()); show('teacher'); setTab(tab); });
+  });
+  $('openSetupBtn').addEventListener('click', function () {
+    openPin(function () { show('teacher'); setTab('students'); });
+  });
+
+  // 자정이 지나면 날짜를 새로 그린다
+  var lastDay = todayKey();
+  setInterval(function () { if (todayKey() !== lastDay) { lastDay = todayKey(); if (view === 'home') renderHome(); renderHeader(); } }, 60000);
+
+  show('home');
+})();
+</script>
+</body>
+</html>
